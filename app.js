@@ -22,6 +22,7 @@ document.getElementById('language').addEventListener('change', (e) => {
   if (editor) {
     const monacoLang = lang === 'cpp' ? 'cpp' : lang;
     monaco.editor.setModelLanguage(editor.getModel(), monacoLang);
+    editor.setValue('');
   }
 });
 
