@@ -5,6 +5,13 @@ const codeTemplates = {
   java: 'import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        if (scanner.hasNext()) {\n            System.out.println("Hello, " + scanner.next() + "!");\n        } else {\n            System.out.println("Hello, World!");\n        }\n    }\n}'
 };
 
+const languageIds = {
+  python: 71,
+  cpp: 54,
+  javascript: 63,
+  java: 62
+};
+
 let editor;
 
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.38.0/min/vs' }});
@@ -46,24 +53,24 @@ document.getElementById('runBtn').addEventListener('click', async () => {
   outputTextarea.value = "⏳ 程式碼執行中，請稍候...";
 
   try {
-    const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+    const response = await fetch('https://ce.judge0.com/submissions?wait=true', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        language: lang,
-        version: "*",
-        files: [{ content: code }],
+        source_code: code,
+        language_id: languageIds[lang],
         stdin: input
       })
     });
 
     const data = await response.json();
 
-    if (data.run) {
-      let resultText = data.run.output;
-      if (data.run.stderr && !resultText.includes(data.run.stderr)) {
-        resultText += "\n[Error Output]:\n" + data.run.stderr;
-      }
+    if (data.stdout !== undefined || data.stderr !== undefined || data.compile_output !== undefined) {
+      let resultText = "";
+      if (data.stdout) resultText += data.stdout;
+      if (data.stderr) resultText += (resultText ? "\n" : "") + "[Runtime Error]:\n" + data.stderr;
+      if (data.compile_output) resultText += (resultText ? "\n" : "") + "[Compile Error]:\n" + data.compile_output;
+      
       outputTextarea.value = resultText || "(程式執行完畢，無輸出內容)";
     } else {
       outputTextarea.value = "❌ 執行失敗：" + (data.message || JSON.stringify(data));
